@@ -84,6 +84,8 @@ or
 
 ### Export to DCC application and build skeleton
 
+
+
 1. use `--write_json` and `--write_images` flag to export keypoints and frame image from openpose, image will be used as imageplane inside maya.
 2. run `python src/openpose_3dpose_sandbox.py --camera_frame --residual --batch_norm --dropout 0.5 --max_norm --evaluateActionWise --use_sh --epochs 200 --load 4874200 --pose_estimation_json /path/to/json_directory --write_gif --gif_fps 24 `.
 3. for interpolation add `--interpolation` and use `--multiplier 0.5`.
@@ -93,7 +95,7 @@ or
 4. change variables in `maya/maya_skeleton.py`. set `threed_pose_baseline` to main 3d-pose-baseline and `openpose_images` to same path as `--write_images` (step 1)
 5. open maya and import `maya/maya_skeleton.py`. 
 
-`maya_skeleton.py` will load the data(`3d_data.json`) to build a skeleton, parenting joints and setting the predicted animation provided by 3d-pose-baseline. 
+`maya_skeleton.py` will load the data(`3d_data.json` and `2d_data.json`) to build a skeleton, parenting joints and setting the predicted animation provided by 3d-pose-baseline. 
 
 6. create a imageplane and use created images inside `maya/image_plane/` as sequence.
 
@@ -105,6 +107,11 @@ or
 
 8. implemented unity stream, check work of Zhenyu Chen [openpose_3d-pose-baseline_unity3d](https://github.com/zhenyuczy/openpose_3d-pose-baseline_unity3d)
 
+### Mapping
+
+<p align="center">
+    <img src="/imgs/maya.png", width="360">
+</p>
 
 ### Result
 
