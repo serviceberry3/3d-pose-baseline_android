@@ -1,4 +1,3 @@
-
 """Predicting 3d poses from 2d joints"""
 
 from __future__ import absolute_import
@@ -16,11 +15,17 @@ import copy
 import matplotlib.pyplot as plt
 import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
-import tensorflow as tf
+
+
+#use v1 of tensorflow
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+
+
 import procrustes
 
 import viz
-import cameras
+import cameras, cameras2
 import data_utils
 import linear_model
 
@@ -48,6 +53,8 @@ tf.app.flags.DEFINE_boolean("evaluateActionWise",False, "The dataset to use eith
 
 # Directories
 tf.app.flags.DEFINE_string("cameras_path","data/h36m/cameras.h5","Directory to load camera parameters")
+#tf.app.flags.DEFINE_string("cameras_path","data/h36m/metadata.xml","Directory to load camera parameters")
+
 tf.app.flags.DEFINE_string("data_dir",   "data/h36m/", "Data directory")
 tf.app.flags.DEFINE_string("train_dir", "experiments", "Training directory.")
 
@@ -85,10 +92,10 @@ train_dir = os.path.join( FLAGS.train_dir,
   'use_stacked_hourglass' if FLAGS.use_sh else 'not_stacked_hourglass',
   'predict_14' if FLAGS.predict_14 else 'predict_17')
 
-print( train_dir )
-summaries_dir = os.path.join( train_dir, "log" ) # Directory for TB summaries
+print(train_dir)
+summaries_dir = os.path.join(train_dir, "log") # Directory for TB summaries
 
-# To avoid race conditions: https://github.com/tensorflow/tensorflow/issues/7448
+#To avoid race conditions: https://github.com/tensorflow/tensorflow/issues/7448
 os.system('mkdir -p {}'.format(summaries_dir))
 
 def create_model( session, actions, batch_size ):
@@ -241,6 +248,7 @@ def train():
         for action in actions:
 
           print("{0:<12} ".format(action), end="")
+
           # Get 2d and 3d testing data for this action
           action_test_set_2d = get_action_subset( test_set_2d, action )
           action_test_set_3d = get_action_subset( test_set_3d, action )
@@ -409,16 +417,25 @@ def evaluate_batches( sess, model,
 def sample():
   """Get samples from a model and visualize them"""
 
-  actions = data_utils.define_actions( FLAGS.action )
+  #the actions to analyze. Default is all
+  actions = data_utils.define_actions(FLAGS.action)
+  print("sample(): actions is ", actions)
 
-  # Load camera parameters
+  #which subjects from the h36m dataset we're using
   SUBJECT_IDS = [1,5,6,7,8,9,11]
-  rcams = cameras.load_cameras(FLAGS.cameras_path, SUBJECT_IDS)
 
-  # Load 3d data and load (or create) 2d projections
+  print("sample(): Loading camera params")
+
+  #Load camera parameters
+  rcams = cameras2.load_cameras(FLAGS.cameras_path, SUBJECT_IDS)
+
+  #Load 3d data and load (or create) 2d projections
   train_set_3d, test_set_3d, data_mean_3d, data_std_3d, dim_to_ignore_3d, dim_to_use_3d, train_root_positions, test_root_positions = data_utils.read_3d_data(
-    actions, FLAGS.data_dir, FLAGS.camera_frame, rcams, FLAGS.predict_14 )
+    actions, FLAGS.data_dir, FLAGS.camera_frame, rcams, FLAGS.predict_14)
 
+
+
+  
   if FLAGS.use_sh:
     train_set_2d, test_set_2d, data_mean_2d, data_std_2d, dim_to_ignore_2d, dim_to_use_2d = data_utils.read_2d_predictions(actions, FLAGS.data_dir)
   else:
@@ -426,6 +443,8 @@ def sample():
   print( "done reading and normalizing data." )
 
   device_count = {"GPU": 0} if FLAGS.use_cpu else {"GPU": 1}
+
+  
   with tf.Session(config=tf.ConfigProto( device_count = device_count )) as sess:
     # === Create the model ===
     print("Creating %d layers of %d units." % (FLAGS.num_layers, FLAGS.linear_size))
@@ -513,34 +532,41 @@ def sample():
 
   subplot_idx, exidx = 1, 1
   nsamples = 15
-  for i in np.arange( nsamples ):
+
+
+
+
+  for i in np.arange(nsamples):
 
     # Plot 2d pose
     ax1 = plt.subplot(gs1[subplot_idx-1])
     p2d = enc_in[exidx,:]
-    viz.show2Dpose( p2d, ax1 )
+    viz.show2Dpose(p2d, ax1)
     ax1.invert_yaxis()
 
     # Plot 3d gt
     ax2 = plt.subplot(gs1[subplot_idx], projection='3d')
     p3d = dec_out[exidx,:]
-    viz.show3Dpose( p3d, ax2 )
+    viz.show3Dpose(p3d, ax2)
 
     # Plot 3d predictions
     ax3 = plt.subplot(gs1[subplot_idx+1], projection='3d')
     p3d = poses3d[exidx,:]
-    viz.show3Dpose( p3d, ax3, lcolor="#9b59b6", rcolor="#2ecc71" )
+    viz.show3Dpose(p3d, ax3, lcolor="#9b59b6", rcolor="#2ecc71")
 
     exidx = exidx + 1
     subplot_idx = subplot_idx + 3
 
+  #show the visualization
   plt.show()
 
 def main(_):
   if FLAGS.sample:
+    print("sample flag is true, running sample() fxn")
     sample()
   else:
     train()
 
 if __name__ == "__main__":
+  print("__name__ == main function")
   tf.app.run()

@@ -10,7 +10,12 @@ from tensorflow.python.ops import variable_scope as vs
 import os
 import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
-import tensorflow as tf
+
+#use v1 of tensorflow
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+
+
 import data_utils
 import cameras as cam
 

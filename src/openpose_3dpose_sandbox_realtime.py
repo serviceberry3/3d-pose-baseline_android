@@ -2,11 +2,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import tensorflow as tf
+#import tensorflow as tf
+
+#use v1 of tensorflow
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+
 import data_utils
 import viz
 import re
-import cameras
+import cameras, cameras2
 import json
 import os
 from predict_3dpose import create_model
@@ -30,10 +35,11 @@ def main(_):
     enc_in = np.zeros((1, 64))
     enc_in[0] = [0 for i in range(64)]
 
+    #actions to run on, default is all
     actions = data_utils.define_actions(FLAGS.action)
 
     SUBJECT_IDS = [1, 5, 6, 7, 8, 9, 11]
-    rcams = cameras.load_cameras(FLAGS.cameras_path, SUBJECT_IDS)
+    rcams = cameras2.load_cameras(FLAGS.cameras_path, SUBJECT_IDS)
     train_set_2d, test_set_2d, data_mean_2d, data_std_2d, dim_to_ignore_2d, dim_to_use_2d = data_utils.read_2d_predictions(
         actions, FLAGS.data_dir)
     train_set_3d, test_set_3d, data_mean_3d, data_std_3d, dim_to_ignore_3d, dim_to_use_3d, train_root_positions, test_root_positions = data_utils.read_3d_data(
@@ -41,18 +47,27 @@ def main(_):
 
     device_count = {"GPU": 0}
     png_lib = []
-    with tf.Session(config=tf.ConfigProto(
-            device_count=device_count,
-            allow_soft_placement=True)) as sess:
+
+    with tf.Session(config=tf.ConfigProto(device_count=device_count, allow_soft_placement=True)) as sess:
         #plt.figure(3)
+
+        #load pre-trained model
         batch_size = 128
         model = create_model(sess, actions, batch_size)
+
+
+        #infinitely show 3d pose visualization
         while True:
+            #wait for key to be pressed
             key = cv2.waitKey(1) & 0xFF
+
             #logger.info("start reading data")
-            # check for other file types
-            list_of_files = glob.iglob("{0}/*".format(openpose_output_dir))  # You may use iglob in Python3
+
+            #check for other file types
+            list_of_files = glob.iglob("{0}/*".format(openpose_output_dir)) 
             latest_file = ""
+
+
             try:
                 latest_file = max(list_of_files, key=os.path.getctime)
             except ValueError:
@@ -61,16 +76,21 @@ def main(_):
             if not latest_file:
                 continue
             try:
+                #load the 2d keypoints from last frame from the json file (streaming from openpose)
                 _file = file_name = latest_file
-                print (latest_file)
+                print(latest_file)
+
                 if not os.path.isfile(_file): raise Exception("No file found!!, {0}".format(_file))
                 data = json.load(open(_file))
-                #take first person
+
+                #take 2d keypoints of first person (assume only one person)
                 _data = data["people"][0]["pose_keypoints_2d"]
+
                 xy = []
-                if len(_data)>=53:
-                    #openpose incl. confidence score
-                    #ignore confidence score
+
+
+                if len(_data) >= 53:
+                    #openpose includes the confidence score, ignore it
                     for o in range(0,len(_data),3):
                         xy.append(_data[o])
                         xy.append(_data[o+1])
@@ -83,7 +103,7 @@ def main(_):
                 logger.debug("found {0} for frame {1}".format(xy, str(frame)))
 
                 #body_25 support, convert body_25 output format to coco
-                if len(xy)>54:
+                if len(xy) > 54:
                     _xy = xy[0:19*2]
                     for x in range(len(xy)):
                         #del jnt 8
@@ -134,17 +154,24 @@ def main(_):
                     #coco 
                     xy = _xy
 
+
                 joints_array = np.zeros((1, 36))
                 joints_array[0] = [0 for i in range(36)]
+
                 for o in range(len(joints_array[0])):
                     #feed array with xy array
                     joints_array[0][o] = xy[o]
+
+
                 _data = joints_array[0]
-                # mapping all body parts or 3d-pose-baseline format
+
+                #mapping all body parts or 3d-pose-baseline format
                 for i in range(len(order)):
                     for j in range(2):
                         # create encoder input
                         enc_in[0][order[i] * 2 + j] = _data[i * 2 + j]
+
+
                 for j in range(2):
                     # Hip
                     enc_in[0][0 * 2 + j] = (enc_in[0][1 * 2 + j] + enc_in[0][6 * 2 + j]) / 2
@@ -153,25 +180,41 @@ def main(_):
                     # Thorax
                     enc_in[0][13 * 2 + j] = 2 * enc_in[0][12 * 2 + j] - enc_in[0][14 * 2 + j]
 
-                # set spine
+                #set spine
                 spine_x = enc_in[0][24]
                 spine_y = enc_in[0][25]
 
                 enc_in = enc_in[:, dim_to_use_2d]
+
+                #find mean of 2d data
                 mu = data_mean_2d[dim_to_use_2d]
+
+                #find stdev of 2d data
                 stddev = data_std_2d[dim_to_use_2d]
+
+                #subtract mean and divide std for all
                 enc_in = np.divide((enc_in - mu), stddev)
 
                 dp = 1.0
                 dec_out = np.zeros((1, 48))
                 dec_out[0] = [0 for i in range(48)]
+
+
+                #get the 3d poses
                 _, _, poses3d = model.step(sess, enc_in, dec_out, dp, isTraining=False)
+
+
                 all_poses_3d = []
                 enc_in = data_utils.unNormalizeData(enc_in, data_mean_2d, data_std_2d, dim_to_ignore_2d)
                 poses3d = data_utils.unNormalizeData(poses3d, data_mean_3d, data_std_3d, dim_to_ignore_3d)
+
+
                 gs1 = gridspec.GridSpec(1, 1)
-                gs1.update(wspace=-0.00, hspace=0.05)  # set the spacing between axes.
+
+                #set spacing between axes
+                gs1.update(wspace=-0.00, hspace=0.05)  
                 plt.axis('off')
+
                 all_poses_3d.append( poses3d )
                 enc_in, poses3d = map( np.vstack, [enc_in, all_poses_3d] )
                 subplot_idx, exidx = 1, 1
@@ -204,19 +247,31 @@ def main(_):
                 p3d = poses3d
 
                 viz.show3Dpose(p3d, ax, lcolor="#9b59b6", rcolor="#2ecc71")
+
                 before_pose = poses3d
+
+                #save this frame as a png in the ./png/ folder
                 pngName = 'png/test_{0}.png'.format(str(frame))
                 plt.savefig(pngName)
 
                 #plt.show()
-                img = cv2.imread(pngName,0)
+                
+                #read this frame which was just saved as png
+                img = cv2.imread(pngName, 0)
+
                 rect_cpy = img.copy()
+
+                #show this frame
                 cv2.imshow('3d-pose-baseline', rect_cpy)
+
+                #done with this file
                 done.append(file_name)
+
+                #quit if q is pressed
                 if key == ord('q'):
                     break
             except Exception as e:
-                print (e)
+                print(e)
 
         sess.close()
 

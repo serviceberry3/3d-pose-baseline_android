@@ -1,4 +1,3 @@
-
 """Utility functions for dealing with human3.6m data."""
 
 from __future__ import division
@@ -59,7 +58,6 @@ SH_NAMES[15] = 'LWrist'
 def load_data( bpath, subjects, actions, dim=3 ):
   """
   Loads 2d ground truth from disk, and puts it in an easy-to-acess dictionary
-
   Args
     bpath: String. Path where to load the data from
     subjects: List of integers. Subjects whose data will be loaded
@@ -118,7 +116,6 @@ def load_data( bpath, subjects, actions, dim=3 ):
 def load_stacked_hourglass(data_dir, subjects, actions):
   """
   Load 2d detections from disk, and put it in an easy-to-acess dictionary.
-
   Args
     data_dir: string. Directory where to load the data from,
     subjects: list of integers. Subjects whose data will be loaded.
@@ -193,7 +190,6 @@ def load_stacked_hourglass(data_dir, subjects, actions):
 def normalization_stats(complete_data, dim, predict_14=False ):
   """
   Computes normalization statistics: mean and stdev, dimensions used and ignored
-
   Args
     complete_data: nxd np array with poses
     dim. integer={2,3} dimensionality of the data
@@ -258,7 +254,6 @@ def transform_world_to_camera(poses_set, cams, ncams=4 ):
 def normalize_data(data, data_mean, data_std, dim_to_use ):
   """
   Normalizes a dictionary of poses
-
   Args
     data: dictionary where values are
     data_mean: np vector with the mean of the data
@@ -282,7 +277,6 @@ def unNormalizeData(normalized_data, data_mean, data_std, dimensions_to_ignore):
   """
   Un-normalizes a matrix whose mean has been substracted and that has been divided by
   standard deviation. Some dimensions might also be missing
-
   Args
     normalized_data: nxd matrix to unnormalize
     data_mean: np vector with the mean of the data
@@ -312,7 +306,6 @@ def unNormalizeData(normalized_data, data_mean, data_std, dimensions_to_ignore):
 def define_actions( action ):
   """
   Given an action string, returns a list of corresponding actions.
-
   Args
     action: String. either "all" or one of the h36m actions
   Returns
@@ -337,7 +330,6 @@ def define_actions( action ):
 def project_to_cameras( poses_set, cams, ncams=4 ):
   """
   Project 3d poses using camera parameters
-
   Args
     poses_set: dictionary with 3d poses
     cams: dictionary with camera parameters
@@ -365,7 +357,6 @@ def project_to_cameras( poses_set, cams, ncams=4 ):
 def read_2d_predictions( actions, data_dir ):
   """
   Loads 2d data from precomputed Stacked Hourglass detections
-
   Args
     actions: list of strings. Actions to load
     data_dir: string. Directory where the data can be loaded from
@@ -394,7 +385,6 @@ def create_2d_data( actions, data_dir, rcams ):
   """
   Creates 2d poses by projecting 3d poses with the corresponding camera
   parameters. Also normalizes the 2d poses
-
   Args
     actions: list of strings. Actions to load
     data_dir: string. Directory where the data can be loaded from
@@ -429,7 +419,6 @@ def create_2d_data( actions, data_dir, rcams ):
 def read_3d_data( actions, data_dir, camera_frame, rcams, predict_14=False ):
   """
   Loads 3d poses, zero-centres and normalizes them
-
   Args
     actions: list of strings. Actions to load
     data_dir: string. Directory where the data can be loaded from
@@ -472,7 +461,6 @@ def read_3d_data( actions, data_dir, camera_frame, rcams, predict_14=False ):
 def postprocess_3d( poses_set ):
   """
   Center 3d points around root
-
   Args
     poses_set: dictionary with 3d data
   Returns
