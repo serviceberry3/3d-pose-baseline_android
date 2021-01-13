@@ -35,4 +35,4 @@ You can test the pre-trained model by downloading it at the link above, decompre
 `python src/predict_3dpose.py --camera_frame --residual --batch_norm --dropout 0.5 --max_norm --evaluateActionWise --use_sh --epochs 200 --sample --load 4874200`
 
 You should see something like this:  
-![Visualization example](/imgs/viz_example.png?raw=1) 
+![Visualization example](/imgs/viz_example.png?raw=1)

@@ -354,7 +354,7 @@ def project_to_cameras( poses_set, cams, ncams=4 ):
   return t2d
 
 
-def read_2d_predictions( actions, data_dir ):
+def read_2d_predictions(actions, data_dir):
   """
   Loads 2d data from precomputed Stacked Hourglass detections
   Args
@@ -372,7 +372,7 @@ def read_2d_predictions( actions, data_dir ):
   train_set = load_stacked_hourglass( data_dir, TRAIN_SUBJECTS, actions)
   test_set  = load_stacked_hourglass( data_dir, TEST_SUBJECTS,  actions)
 
-  complete_train = copy.deepcopy( np.vstack( train_set.values() ))
+  complete_train = copy.deepcopy(np.vstack( train_set.values()))
   data_mean, data_std,  dim_to_ignore, dim_to_use = normalization_stats( complete_train, dim=2 )
 
   train_set = normalize_data( train_set, data_mean, data_std, dim_to_use )
@@ -399,15 +399,15 @@ def create_2d_data( actions, data_dir, rcams ):
   """
 
   # Load 3d data
-  train_set = load_data( data_dir, TRAIN_SUBJECTS, actions, dim=3 )
-  test_set  = load_data( data_dir, TEST_SUBJECTS,  actions, dim=3 )
+  train_set = load_data(data_dir, TRAIN_SUBJECTS, actions, dim=3)
+  test_set  = load_data(data_dir, TEST_SUBJECTS,  actions, dim=3)
 
-  train_set = project_to_cameras( train_set, rcams )
-  test_set  = project_to_cameras( test_set, rcams )
+  train_set = project_to_cameras(train_set, rcams)
+  test_set  = project_to_cameras(test_set, rcams)
 
   # Compute normalization statistics.
-  complete_train = copy.deepcopy( np.vstack( train_set.values() ))
-  data_mean, data_std, dim_to_ignore, dim_to_use = normalization_stats( complete_train, dim=2 )
+  complete_train = copy.deepcopy( np.vstack(train_set.values()))
+  data_mean, data_std, dim_to_ignore, dim_to_use = normalization_stats(complete_train, dim=2)
 
   # Divide every dimension independently
   train_set = normalize_data( train_set, data_mean, data_std, dim_to_use )
@@ -416,7 +416,7 @@ def create_2d_data( actions, data_dir, rcams ):
   return train_set, test_set, data_mean, data_std, dim_to_ignore, dim_to_use
 
 
-def read_3d_data( actions, data_dir, camera_frame, rcams, predict_14=False ):
+def read_3d_data(actions, data_dir, camera_frame, rcams, predict_14=False):
   """
   Loads 3d poses, zero-centres and normalizes them
   Args
