@@ -139,19 +139,25 @@ def main(_):
 
             #print("len of joints_array[0] is ", len(joints_array[0]))
 
+            #index into our data array
+            index = 0
+
             #iterates 18 times
             for o in range(int(len(joints_array[0]) / 2)):
                 #feed array with xy array (the 18 keypoints), but switch ordering: posenet to openpose
-                for j in range(2):
-                    joints_array[0][o * (j+1) + j] = xy[order_pnet_to_openpose[o] * (j+1) + j]
+                for j in range(2): 
+                    #print("o is", o, "j is", j, "index is ", index)
+                    index_into_posenet_data = order_pnet_to_openpose[o] * 2 + j
+                    #print("putting posenet[", index_into_posenet_data, "], value ", xy[index_into_posenet_data], " , into joints_array[0][", index, "]")
+
+                    joints_array[0][index] = xy[index_into_posenet_data]
+                    index += 1
 
             #set _data to the array containing the 36 coordinates of the 2d keypts
             _data = joints_array[0]
 
-
             #print("_data is ", _data)
 
-            
             #mapping all body parts for 3d-pose-baseline format (32 2d coordinates)
             for i in range(len(order)): #iterates 14 times
                 #select which coordinateof this point: x or y
