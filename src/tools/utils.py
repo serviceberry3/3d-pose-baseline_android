@@ -23,6 +23,11 @@ class common():
                 [11, 13], [12, 14], [13, 15], [14, 16]]
 
 
+def midpoint(p1x, p1y, p2x, p2y):
+    mid = np.array([(p1x+p2x)/2, (p1y+p2y)/2])
+    #print("mid is ", mid)
+    return mid
+
 
 def resize_img(frame, max_length=640):
     H, W = frame.shape[:2]
