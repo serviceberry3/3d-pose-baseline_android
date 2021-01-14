@@ -95,28 +95,21 @@ def main(_):
             frame, W, H = resize_img(frame)
             frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
-
-            #try:
-            #take 2d keypoints of first person (assume only one person). File looks like it actually has 18 joints (includes CHEST)
-            #_data = data["people"][0]["pose_keypoints_2d"]
-
+            start = time.time()
             #run posenet inference on the frame
             joints_2d = estimate_pose(frame)
 
             #throw out confidence score and flatten
             _data = joints_2d[..., :2].flatten()
 
-            #print("data from posenet is ", _data)
-
             #open pop-up and draw the keypoints found
-            #img2D  = draw_2Dimg(frame, joints_2d, 1)
+            img2D  = draw_2Dimg(frame, joints_2d, 1)
 
             #fake the thorax point by finding midpt between left and right shoulder
             lt_should_x = _data[10]
             lt_should_y = _data[11]
             rt_should_x = _data[12]
             rt_should_y = _data[13]
-
 
             thorax = midpoint(lt_should_x, lt_should_y, rt_should_x, rt_should_y)
 
@@ -136,8 +129,6 @@ def main(_):
             #create new 1x36 array of zeroes, which will store the 18 2d keypoints
             joints_array = np.zeros((1, 36))
             joints_array[0] = [0 for i in range(36)]
-
-            #print("len of joints_array[0] is ", len(joints_array[0]))
 
             #index into our data array
             index = 0
@@ -183,7 +174,7 @@ def main(_):
 
             #dim_to_use_2d is always [0  1  2  3  4  5  6  7 12 13 14 15 16 17 24 25 26 27 30 31 34 35 36 37 38 39 50 51 52 53 54 55]
 
-            
+        
             #take 32 entries of enc_in
             enc_in = enc_in[:, dim_to_use_2d]
 
@@ -209,6 +200,9 @@ def main(_):
             #get the 3d poses by running the 3d-pose-baseline inference. Model operates on 32 points
             _, _, poses3d = model.step(sess, enc_in, dec_out, dp, isTraining=False)
             #poses3d comes back as a 1x96 array (I guess its 32 points)
+
+            end = time.time()
+            #print("ELAPSED: ", end-start)
 
             #hold our 3d poses while we're doing some post-processing
             all_poses_3d = []
@@ -270,9 +264,7 @@ def main(_):
             ax.view_init(18, -70)    
             logger.debug(np.min(poses3d))
 
-            #if something happened with the data, reuse data from last frame
-            if np.min(poses3d) < -1000 and frame != 0:
-                poses3d = before_pose
+            #TODO: if something happened with the data, reuse data from last frame (before_pose)
 
             p3d = poses3d
 

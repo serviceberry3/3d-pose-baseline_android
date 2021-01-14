@@ -20,6 +20,9 @@ From the paper by Martinez et al.:
 on the challenges of current approaches. Our model is lightweight and we strive
 to make our code transparent, compact, and easy-to-understand."
 
+Here's a preview of the model running in real time, using TfLite Posenet:    
+![3d-pose-baseline preview](https://github.com/serviceberry3/3d-pose-baseline_android/blob/master/img/baselin4.gif?raw=true)
+
 ### Dependencies
 
 * [h5py](http://www.h5py.org/)
